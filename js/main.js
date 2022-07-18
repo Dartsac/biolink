@@ -1,9 +1,11 @@
 // add a transition
-setTimeout(async function() {
-  const main = document.querySelector('main')
-  main.style.opacity = 1
-  main.style.filter = 'blur(0px)'
-}, 500)
+window.addEventListener('load', function () {
+  setTimeout(() => {
+    const main = document.querySelector('main')
+    main.style.opacity = 1
+    main.style.filter = 'blur(0px)'
+  }, 1000)
+})
 
 let audio = document.getElementById('audio')
 let clicked = false
