@@ -1,12 +1,3 @@
-// add a transition
-window.addEventListener('load', function () {
-  setTimeout(() => {
-    const main = document.querySelector('main')
-    main.style.opacity = 1
-    main.style.filter = 'blur(0px)'
-  }, 1000)
-})
-
 let audio = document.getElementById('audio')
 let clicked = false
 let sound = document.querySelector('body > main > header > div')
