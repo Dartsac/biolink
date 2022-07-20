@@ -91,6 +91,7 @@ h1 {
 /*******************************************/
 
 .handle {
+  margin-top: 4px;
   display: inline-block;
   font-size: 0.8em;
   font-weight: bold;
