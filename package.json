@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "eslint": "^8.19.0",
+    "live-server": "^1.2.2"
+  },
+  "type": "module"
+}
