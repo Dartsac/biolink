@@ -1,67 +1,125 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <title>Tyree Reid - Links</title>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Tyree – Music &amp; Links</title>
+    <meta
+      name="description"
+      content="Listen to Tyree on Apple Music, Spotify and YouTube, and follow along on X."
+    />
+    <meta name="theme-color" content="#000000" />
+    <link rel="canonical" href="https://dartsac.github.io/biolink/" />
+    <link rel="icon" type="image/png" href="icons/favicon.png" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+
+    <meta property="og:type" content="profile" />
+    <meta property="og:title" content="Tyree – Music & Links" />
+    <meta
+      property="og:description"
+      content="Listen to Tyree on Apple Music, Spotify and YouTube."
+    />
+    <meta property="og:url" content="https://dartsac.github.io/biolink/" />
+    <meta
+      property="og:image"
+      content="https://dartsac.github.io/biolink/artist/og-image.jpg"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@reidotyree" />
+
+    <link rel="preload" as="image" href="artist/profile.webp" type="image/webp" />
     <link href="css/normalize.css" rel="stylesheet" />
     <link href="css/style.css" rel="stylesheet" />
-    <script type="text/javascript" src="js/animation.js"></script>
+    <script type="module" src="js/main.js"></script>
   </head>
 
   <body>
-    <!-- <img class="background-img" src="artist/link-edit.gif" alt="background" /> -->
-    <main class="animated">
-      <div class="background-img"></div>
+    <video
+      class="background-video"
+      autoplay
+      muted
+      loop
+      playsinline
+      poster="artist/background-poster.jpg"
+      aria-hidden="true"
+    >
+      <source src="artist/background.webm" type="video/webm" />
+      <source src="artist/background.mp4" type="video/mp4" />
+    </video>
+
+    <main>
+      <button
+        type="button"
+        class="toggle-sound sound-mute"
+        aria-label="Play music"
+      >
+        <span class="sound">
+          <img class="sound__icon" src="icons/speaker-fill.svg" alt="" />
+          <span class="sound__wave sound__wave--one"></span>
+          <span class="sound__wave sound__wave--two"></span>
+          <span class="sound__wave sound__wave--three"></span>
+        </span>
+      </button>
+
       <header>
-        <div class="unmuted toggle-sound sound-mute">
-          <div class="sound">
-            <img
-              class="sound--icon"
-              src="icons/speaker-fill.svg"
-              alt="speaker"
-            />
-            <div class="sound--icon"></div>
-            <div class="sound--wave sound--wave_one"></div>
-            <div class="sound--wave sound--wave_two"></div>
-            <div class="sound--wave sound--wave_three"></div>
-          </div>
+        <h1 class="signature">
+          <img src="artist/tyree-signature.svg" alt="Tyree" />
+        </h1>
+        <picture>
+          <source srcset="artist/profile.webp" type="image/webp" />
+          <img
+            class="profile-pic"
+            src="artist/profile.jpg"
+            alt="Tyree holding a guitar controller"
+            width="480"
+            height="480"
+          />
+        </picture>
+        <p class="handle">@tyree730</p>
+
+        <div class="player" hidden>
+          <span class="player__label">Now previewing</span>
+          <span class="player__title" aria-live="polite"></span>
+          <button type="button" class="player__next" aria-label="Next song">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 5.5v13l9.5-6.5zM16 5h3v14h-3z" />
+            </svg>
+          </button>
         </div>
-        <h1><img src="artist/tyree-signature.svg" alt="signature" /></h1>
-        <img class="profile-pic" src="artist/profile.png" alt="" />
-        <h1 class="handle">@tyree730</h1>
       </header>
-      <audio
-        controls
-        id="audio"
-        preload="metadata"
-        title="IYWTR"
-        src=""
-      ></audio>
-      <ul>
-        <li>
-          <a href="https://music.apple.com/us/artist/tyree/1028194367"
-            ><img src="icons/standard.svg" alt="apple" width="20" />Apple
-            Music</a
-          >
-        </li>
-        <li>
-          <a href="https://open.spotify.com/artist/4J99V6XxSI2ElQozXzeOAL"
-            ><img src="icons/spotify.svg" alt="spotify" width="20" />Spotify</a
-          >
-        </li>
-        <li>
-          <a href="https://twitter.com/reidotyree?s=11&t=RvrAjBDf26LxufMjiyRctg"
-            ><img src="icons/twitter.svg" alt="twitter" width="20" />Twitter</a
-          >
-        </li>
-        <li>
-          <a href="https://www.youtube.com/watch?v=T86Vy6vB8EE&ab_channel=Tyree"
-            ><img src="icons/youtube.svg" alt="youtube" width="20" />YouTube</a
-          >
-        </li>
-      </ul>
+
+      <audio id="audio" preload="metadata"></audio>
+
+      <nav aria-label="Links">
+        <ul class="links">
+          <li>
+            <a href="https://music.apple.com/us/artist/tyree/1028194367">
+              <img src="icons/standard.svg" alt="" width="20" height="20" />
+              Apple Music
+            </a>
+          </li>
+          <li>
+            <a href="https://open.spotify.com/artist/4J99V6XxSI2ElQozXzeOAL">
+              <img src="icons/spotify.svg" alt="" width="20" height="20" />
+              Spotify
+            </a>
+          </li>
+          <li>
+            <a href="https://www.youtube.com/@tyree1843">
+              <img src="icons/youtube.svg" alt="" width="20" height="20" />
+              YouTube
+            </a>
+          </li>
+          <li>
+            <a href="https://x.com/reidotyree">
+              <img src="icons/x.svg" alt="" width="20" height="20" />
+              X
+            </a>
+          </li>
+        </ul>
+      </nav>
     </main>
-    <script type="module" src="js/main.js"></script>
   </body>
 </html>

@@ -1,75 +1,99 @@
-import { CircularQueue, shuffle } from './CircleQueue.js'
+import { createPlaylist } from './playlist.js'
+import { PREVIEW_BASE_URL, tracks } from './tracks.js'
 
-let audio = document.getElementById('audio')
-let clicked = false
-let sound = document.querySelector('body > main > header > div')
-
-const baseURL = 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview'
-
-//I got the links from the audio tag in apple music preview
-const album = [
-  {
-    song: 'Sonic Heroes',
-    url: '115/v4/94/5d/0f/945d0f7f-4f75-34ac-cd66-6d0274d5f594/mzaf_10653277272440219643.plus.aac.ep.m4a',
-  },
-  {
-    song: 'Cycles',
-    url: '125/v4/1e/28/ea/1e28eae6-ad6b-d636-e05d-f14c4dec9506/mzaf_7684779148864293911.plus.aac.ep.m4a',
-  },
-  {
-    song: 'Back by Now',
-    url: '115/v4/40/52/e5/4052e5ef-acf1-535d-6f4a-aa2b92a84862/mzaf_8825934576247881917.plus.aac.ep.m4a',
-  },
-  {
-    song: 'From the Beginning Til Now',
-    url: '125/v4/a2/55/98/a25598df-c41c-d567-63ba-450c69b6da5f/mzaf_5512399793936208221.plus.aac.ep.m4a',
-  },
-  {
-    song: 'Jupiter',
-    url: '125/v4/ef/2b/4e/ef2b4e51-1ad6-c47b-7772-31d1bc583746/mzaf_304583199146327547.plus.aac.ep.m4a',
-  },
-  {
-    song: 'Rotate',
-    url: '125/v4/e5/93/4e/e5934ef8-cc5c-8b1e-10f3-cfeb19dccac6/mzaf_13334983935692768297.plus.aac.ep.m4a',
-  },
-  {
-    song: 'Stephanie',
-    url: '115/v4/61/20/2b/61202b7b-1d54-5c34-199f-d94dab093ddb/mzaf_14847972783641648138.plus.aac.ep.m4a',
-  },
-  {
-    song: 'If You Want the Rainbow',
-    url: '125/v4/d4/d7/b9/d4d7b9ab-219f-aad0-d547-debe73c9ebe4/mzaf_17538184322825033580.plus.aac.ep.m4a',
-  },
-  {
-    song: 'The Binding of Isaac',
-    url: '125/v4/a0/ec/d5/a0ecd5b4-b4ec-adb5-ae76-96f1ea8bb43f/mzaf_13268651908606029302.plus.aac.ep.m4a',
-  },
+const ARTIST = 'Tyree'
+const ARTWORK = [
+  { src: 'artist/profile.jpg', sizes: '480x480', type: 'image/jpeg' },
 ]
 
-let q = new CircularQueue(album)
-q.element = shuffle(album)
-let object = q.dequeue()
-audio.src = baseURL + object.url
+const audio = document.getElementById('audio')
+const toggle = document.querySelector('.toggle-sound')
+const player = document.querySelector('.player')
+const title = player.querySelector('.player__title')
+const nextButton = player.querySelector('.player__next')
+const video = document.querySelector('.background-video')
 
-sound.addEventListener('click', function () {
-  let tog = document.querySelector('.toggle-sound')
-  tog.classList.toggle('sound-mute')
-  if (clicked) {
-    if (audio.muted) {
-      audio.muted = false
-    } else {
-      audio.muted = true
-    }
+const playlist = createPlaylist(tracks)
+// Only resume after errors/track changes if the visitor actually asked for music.
+let wantsPlayback = false
+let consecutiveErrors = 0
+
+function load(track) {
+  audio.src = PREVIEW_BASE_URL + track.path
+  title.textContent = track.title
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: track.title,
+      artist: ARTIST,
+      artwork: ARTWORK,
+    })
+  }
+}
+
+function play() {
+  wantsPlayback = true
+  audio.play().catch(() => {
+    // Autoplay policies or network errors; the UI stays in the paused state.
+  })
+}
+
+function pause() {
+  wantsPlayback = false
+  audio.pause()
+}
+
+function next() {
+  load(playlist.next())
+  if (wantsPlayback) play()
+}
+
+function syncState() {
+  const playing = !audio.paused
+  toggle.classList.toggle('sound-mute', !playing)
+  toggle.setAttribute('aria-label', playing ? 'Pause music' : 'Play music')
+  player.classList.toggle('is-playing', playing)
+}
+
+toggle.addEventListener('click', () => (audio.paused ? play() : pause()))
+nextButton.addEventListener('click', () => {
+  wantsPlayback = true
+  next()
+})
+
+audio.addEventListener('play', syncState)
+audio.addEventListener('pause', syncState)
+audio.addEventListener('playing', () => (consecutiveErrors = 0))
+audio.addEventListener('ended', next)
+audio.addEventListener('error', () => {
+  consecutiveErrors++
+  if (consecutiveErrors < tracks.length) {
+    next()
   } else {
-    if (audio.paused) {
-      audio.play()
-    }
-    clicked = true
+    // Every preview failed (e.g. Apple moved them); hide the player entirely.
+    toggle.hidden = true
+    player.hidden = true
   }
 })
 
-audio.addEventListener('ended', function () {
-  let object = q.dequeue()
-  audio.src = baseURL + object.url
-  audio.play()
-})
+if ('mediaSession' in navigator) {
+  navigator.mediaSession.setActionHandler('play', play)
+  navigator.mediaSession.setActionHandler('pause', pause)
+  navigator.mediaSession.setActionHandler('nexttrack', () => {
+    wantsPlayback = true
+    next()
+  })
+}
+
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+function syncBackground() {
+  if (reducedMotion.matches) {
+    video.pause()
+  } else {
+    video.play().catch(() => {})
+  }
+}
+reducedMotion.addEventListener('change', syncBackground)
+syncBackground()
+
+load(playlist.current)
+player.hidden = false

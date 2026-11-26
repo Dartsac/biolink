@@ -1,7 +1,15 @@
 {
-  "dependencies": {
-    "eslint": "^8.19.0",
-    "live-server": "^1.2.2"
+  "name": "biolink",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "live-server --no-browser",
+    "start": "live-server",
+    "lint": "eslint js",
+    "test": "node --test"
   },
-  "type": "module"
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "live-server": "^1.2.2"
+  }
 }

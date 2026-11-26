@@ -1,241 +1,422 @@
-/* Box Model Hack */
-* {
+/******************************************
+/* BASE
+/*******************************************/
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
-/* Clear fix hack */
-.clearfix:after {
-  content: '.';
-  display: block;
-  clear: both;
-  visibility: hidden;
-  line-height: 0;
-  height: 0;
+:root {
+  --glass: #fffa;
+  --glass-filter: blur(10px) saturate(160%) contrast(180%);
+  --shadow: rgb(28 32 93 / 24%) 0 2px 8px 0;
+  --ink: #000;
+  --paper: #fbfbfb;
+  /* 1% of the *visible* viewport height. dvh tracks mobile browser toolbars
+     showing/hiding, so the page always fits exactly; vh is the fallback. */
+  --h: 1vh;
+  --toggle-size: 55px;
+  --edge: max(1rem, env(safe-area-inset-right));
 }
 
-.clear {
-  clear: both;
+@supports (height: 1dvh) {
+  :root {
+    --h: 1dvh;
+  }
 }
 
-/******************************************
-/* BASE STYLES
-/*******************************************/
-body,
-html {
+html,
+body {
+  height: 100%;
   margin: 0;
   padding: 0;
-  font-family: 'Open Sans', sans-serif;
+  /* One screen, no scrolling or rubber-band bounce. */
+  overflow: hidden;
+  overscroll-behavior: none;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
 }
 
 body {
-  background-image: url('../artist/link-edit.gif');
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center center;
-  height: 100vh;
-}
-
-ul {
-  box-sizing: border-box;
-  list-style-type: none;
-  margin: 0 auto;
-  padding: 0 2em;
-}
-
-ul > li {
-  background-color: #fffa;
-  backdrop-filter: blur(10px) saturate(160%) contrast(180%);
-  -webkit-backdrop-filter: blur(10px) saturate(160%) contrast(180%);
-  border-radius: 10em;
-  padding: 1em;
-  margin: 1.4em 0;
-  box-shadow: rgb(28 32 93 / 24%) 0px 2px 8px 0px;
-}
-
-ul > li > a {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  gap: 0.5em;
+  background: #111 url('../artist/background-poster.jpg') center / cover
+    no-repeat;
 }
 
 a {
-  color: black;
+  color: var(--ink);
   text-decoration: none;
 }
 
-main {
-  position: relative;
-}
-
-main.animated {
-  opacity: 0;
-  filter: blur(10px);
-  transition:
-    opacity 2s ease-in-out,
-    filter 2s ease-in-out;
-}
-
-header {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
 h1 {
-  margin: 0 0;
+  margin: 0;
+}
+
+:focus-visible {
+  outline: 3px solid var(--paper);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px var(--ink);
 }
 
 /******************************************
-/* ADDITIONAL STYLES
+/* BACKGROUND
 /*******************************************/
+.background-video {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
 
-.handle {
-  margin-top: 4px;
-  display: inline-block;
-  font-size: 0.8em;
-  font-weight: bold;
-  border-radius: 1em;
-  background-color: #000a;
-  color: #fbfbfb;
-  padding: 0.3em 0.6em;
-  border: 1px solid;
+/******************************************
+/* LAYOUT
+/*******************************************/
+main {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  height: calc(var(--h) * 100);
+  padding: max(calc(var(--h) * 2), env(safe-area-inset-top))
+    max(1.5rem, env(safe-area-inset-right))
+    max(calc(var(--h) * 2), env(safe-area-inset-bottom))
+    max(1.5rem, env(safe-area-inset-left));
+  overflow: hidden;
+  animation: reveal 2s ease-in-out 0.5s both;
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    /* `none` (not blur(0)) so <main> stops being a backdrop root and the
+       glass effect on the link pills can see the video behind it. */
+    filter: none;
+  }
+}
+
+header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--h) * 1);
+  text-align: center;
+}
+
+/* Everything below scales with screen height so it fits on short phones
+   (e.g. iPhone SE with toolbars) and fills tall ones. */
+.signature img {
+  display: block;
+  /* Leave room on both sides for the sound toggle in the corner. */
+  width: min(
+    350px,
+    calc(100vw - 2 * (var(--toggle-size) + var(--edge)) - 1rem),
+    calc(var(--h) * 30)
+  );
+  height: auto;
 }
 
 .profile-pic {
-  backdrop-filter: blur(10px) saturate(160%) contrast(180%);
-  -webkit-backdrop-filter: blur(10px) saturate(160%) contrast(180%);
-  width: 18vw;
-  height: 18vw;
-  min-width: 8rem;
-  min-height: 8rem;
+  display: block;
+  width: min(14rem, 60vw, calc(var(--h) * 23));
+  height: auto;
+  aspect-ratio: 1;
   object-fit: cover;
   border-radius: 50%;
-  border: 1px solid #fbfbfb;
-  box-shadow: rgb(28 32 93 / 24%) 0px 2px 8px 0px;
+  border: 1px solid var(--paper);
+  box-shadow: var(--shadow);
 }
 
-audio {
+.handle {
+  display: inline-block;
+  margin: 0;
+  padding: 0.3em 0.6em;
+  font-size: 0.8em;
+  font-weight: bold;
+  color: var(--paper);
+  background-color: #000a;
+  border: 1px solid;
+  border-radius: 1em;
+}
+
+/******************************************
+/* LINKS
+/*******************************************/
+.links {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.4rem, calc(var(--h) * 2.2), 1.4rem);
+  width: 100%;
+  max-width: 36rem;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+
+.links a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  padding: clamp(0.5rem, calc(var(--h) * 2), 1rem);
+  white-space: nowrap;
+  font-size: clamp(0.9rem, calc(var(--h) * 2.3), 1rem);
+  border-radius: 10em;
+  background-color: var(--glass);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  box-shadow: var(--shadow);
+  transition:
+    transform 150ms ease,
+    background-color 150ms ease;
+}
+
+.links a:hover {
+  transform: translateY(-2px);
+  background-color: #fffd;
+}
+
+.links a:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/******************************************
+/* PLAYER
+/*******************************************/
+.player {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  max-width: 100%;
+  margin-top: calc(var(--h) * 0.5);
+  padding: 0.25em 0.25em 0.25em 0.9em;
+  font-size: 0.8em;
+  color: var(--paper);
+  background-color: #000a;
+  border-radius: 2em;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.player[hidden] {
   display: none;
 }
 
-button {
-  display: block;
-  position: absolute;
-  z-index: 9999;
-  background: red;
-  width: 1.5rem;
-  aspect-ratio: 1;
-  top: 2rem;
-  right: 2rem;
+.player__label {
+  opacity: 0.7;
+  white-space: nowrap;
 }
 
-.toggle-sound {
-  z-index: 1000;
-  display: block;
-  position: absolute;
-  aspect-ratio: 1;
-  top: 2.8rem;
-  right: 2.8rem;
-  background-color: #000;
-  width: 55px;
-  height: 55px;
-  line-height: 55px;
+.player.is-playing .player__label::before {
+  content: '♪ ';
+}
+
+.player__title {
+  overflow: hidden;
+  font-weight: bold;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.player__next {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2em;
+  height: 2em;
+  padding: 0;
+  color: inherit;
+  background: #fff2;
+  border: 0;
   border-radius: 50%;
   cursor: pointer;
-  animation: pulse 1.25s infinite cubic-bezier(0.66, 0, 0, 1);
-  box-shadow: 0 0 0 0 #000;
 }
+
+.player__next:hover {
+  background: #fff4;
+}
+
+.player__next svg {
+  width: 1em;
+  height: 1em;
+  fill: currentColor;
+}
+
+/******************************************
+/* SOUND TOGGLE
+/*******************************************/
+.toggle-sound {
+  position: absolute;
+  top: max(calc(var(--h) * 2), env(safe-area-inset-top));
+  right: var(--edge);
+  z-index: 1000;
+  display: block;
+  width: var(--toggle-size);
+  height: var(--toggle-size);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background-color: var(--ink);
+  cursor: pointer;
+  box-shadow: 0 0 0 0 var(--ink);
+  animation: pulse 1.25s infinite cubic-bezier(0.66, 0, 0, 1);
+}
+
+.toggle-sound[hidden] {
+  display: none;
+}
+
 .toggle-sound.sound-mute {
   box-shadow: none;
 }
-@-webkit-keyframes pulse {
-  to {
-    box-shadow: 0 0 0 45px rgba(232, 76, 61, 0);
-  }
-}
-@-moz-keyframes pulse {
-  to {
-    box-shadow: 0 0 0 45px rgba(232, 76, 61, 0);
-  }
-}
-@-ms-keyframes pulse {
-  to {
-    box-shadow: 0 0 0 45px rgba(232, 76, 61, 0);
-  }
-}
+
 @keyframes pulse {
   to {
-    box-shadow: 0 0 0 45px rgba(232, 76, 61, 0);
+    box-shadow: 0 0 0 45px rgb(232 76 61 / 0%);
   }
 }
 
 .sound {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: inline-block;
   width: 97%;
   height: 100%;
-  position: absolute;
-  cursor: pointer;
-  display: inline-block;
-  left: 0;
-  top: 0;
   margin-left: -15%;
 }
 
-.sound--icon {
-  width: 20px;
+.sound__icon {
   display: block;
+  width: 20px;
   margin: 0 auto;
   padding-top: 18px;
 }
-.sound--wave {
+
+.sound__wave {
   position: absolute;
+  inset: 0;
+  margin: auto;
   border: 2px solid transparent;
   border-right: 2px solid #fff;
   border-radius: 50%;
   transition: all 200ms;
-  margin: auto;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
 }
-.sound--wave_one {
+
+.sound__wave--one {
   width: 45%;
   height: 40%;
 }
-.sound--wave_two {
+
+.sound__wave--two {
   width: 70%;
   height: 62%;
 }
-.sound--wave_three {
+
+.sound__wave--three {
   width: 95%;
   height: 75%;
 }
-.sound-mute .sound--wave {
-  border-radius: 0;
+
+.sound-mute .sound__wave {
+  left: 14px;
   width: 12px;
   height: 10px;
   border-width: 0 2px 0 0;
-  left: 14px;
-}
-.sound-mute .sound--wave_one {
-  -webkit-transform: rotate(45deg) translate3d(0, -50%, 0);
-  transform: rotate(45deg) translate3d(0, -50%, 0);
-}
-.sound-mute .sound--wave_two {
-  -webkit-transform: rotate(-45deg) translate3d(0, 50%, 0);
-  transform: rotate(-45deg) translate3d(0, 50%, 0);
-}
-.sound-mute .sound--wave_three {
-  opacity: 0;
-  transform: translateX(-46%);
-  height: 20%;
+  border-radius: 0;
 }
 
-body > main > header > h1:nth-child(2) > img {
-  max-width: 350px;
-  margin: 0 0 0 0;
-  width: 79vw;
+.sound-mute .sound__wave--one {
+  transform: rotate(45deg) translate3d(0, -50%, 0);
+}
+
+.sound-mute .sound__wave--two {
+  transform: rotate(-45deg) translate3d(0, 50%, 0);
+}
+
+.sound-mute .sound__wave--three {
+  height: 20%;
+  opacity: 0;
+  transform: translateX(-46%);
+}
+
+/******************************************
+/* VERY SHORT PORTRAIT SCREENS
+/*******************************************/
+/* e.g. iPhone SE (1st gen) with browser toolbars showing. */
+@media (orientation: portrait) and (max-height: 520px) {
+  .signature img {
+    width: min(350px, calc(var(--h) * 24));
+  }
+
+  .profile-pic {
+    width: calc(var(--h) * 20);
+  }
+}
+
+/******************************************
+/* LANDSCAPE PHONES
+/*******************************************/
+/* Too short to stack everything, so put the profile and links side by side. */
+@media (orientation: landscape) and (max-height: 500px) {
+  main {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-evenly;
+    gap: 1.5rem;
+    padding-right: calc(var(--toggle-size) + var(--edge) + 1rem);
+  }
+
+  header,
+  nav {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .signature img {
+    width: min(350px, calc(var(--h) * 55));
+  }
+
+  .profile-pic {
+    width: calc(var(--h) * 32);
+  }
+
+  .links {
+    gap: calc(var(--h) * 3.5);
+  }
+
+  .links a {
+    padding: calc(var(--h) * 2.6);
+  }
+}
+
+/******************************************
+/* REDUCED MOTION
+/*******************************************/
+@media (prefers-reduced-motion: reduce) {
+  main,
+  .toggle-sound {
+    animation: none;
+  }
+
+  .links a,
+  .sound__wave {
+    transition: none;
+  }
+
+  .links a:hover {
+    transform: none;
+  }
 }
