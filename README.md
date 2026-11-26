@@ -51,6 +51,9 @@ ffmpeg -i clip.mov -an -vf "$VF" -pix_fmt yuv420p -c:v libvpx-vp9 -crf 40 -b:v 0
 ffmpeg -i clip.mov -vf "$VF" -frames:v 1 -q:v 3 artist/background-poster.jpg
 ```
 
+`index.html` lists the MP4 before the WebM on purpose: Safari must use the
+MP4 (WebKit's WebM playback stalls). Keep that order.
+
 The original source clip is `artist/link-edit.gif` in commit `3b579aa`
 (`git show 3b579aa:artist/link-edit.gif > clip.gif`). Film grain and the
 vignette are a CSS overlay (`body::after`).

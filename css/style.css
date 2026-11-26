@@ -8,6 +8,10 @@
 }
 
 :root {
+  /* The page is dark in both light and dark mode; tell the browser so the
+     canvas, overscroll areas and Safari's bars never flash or tint light. */
+  color-scheme: dark;
+  /* Keep in sync with <meta name="theme-color">. */
   --ink: #0e0c0b;
   --paper: #f5f1e8;
   --muted: #f5f1e8b8;
@@ -92,6 +96,14 @@ body::after {
   background:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='1.5 1.5 1.5 0 -1.75 1.5 1.5 1.5 0 -1.75 1.5 1.5 1.5 0 -1.75 0 0 0 0 .13'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")
       0 0 / 200px 200px,
+    /* Melt the top and bottom edges into --ink, the colour Safari paints its
+       status bar / toolbar areas with, so there is no hard seam. */
+    linear-gradient(
+      var(--ink),
+      #0e0c0b00 calc(var(--h) * 9),
+      #0e0c0b00 calc(var(--h) * 93),
+      var(--ink)
+    ),
     radial-gradient(120% 75% at 50% 38%, #0000 0%, #0e0c0b8c 100%),
     linear-gradient(#0e0c0b4d, #0e0c0b14 35%, #0e0c0ba6);
 }
@@ -176,7 +188,9 @@ nav {
   display: flex;
   align-items: center;
   gap: 10px;
-  max-width: min(100%, 22rem);
+  /* Fixed width, like a mini player: the buttons stay put from song to song
+     and every current title fits without scrolling, even at 320px. */
+  width: min(100%, 19rem);
   margin-top: calc(var(--h) * 0.6);
   padding: 4px;
   font-size: clamp(12px, calc(var(--h) * 2.1), 14px);
@@ -193,9 +207,12 @@ nav {
 
 .player__text {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
   min-width: 0;
+  text-align: left;
 }
 
 .player__label {
@@ -207,10 +224,48 @@ nav {
 }
 
 .player__title {
+  /* The 8px of left padding (cancelled by the margin) is where the marquee
+     fades out; at rest the text sits just clear of it. */
+  margin-left: -8px;
+  padding-left: 8px;
+  max-width: calc(100% + 8px);
   overflow: hidden;
   font-weight: 600;
+  line-height: 1.2;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+/* Long titles: main.js adds .is-scrolling and animates the track, which then
+   holds two copies of the title so the loop is seamless. */
+.player__title.is-scrolling {
+  text-overflow: clip;
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    #0000,
+    #000 8px,
+    #000 calc(100% - 20px),
+    #0000
+  );
+  mask-image: linear-gradient(
+    90deg,
+    #0000,
+    #000 8px,
+    #000 calc(100% - 20px),
+    #0000
+  );
+}
+
+.player__title.is-scrolling .player__title-track {
+  display: inline-flex;
+  width: max-content;
+  vertical-align: top;
+  will-change: transform;
+}
+
+.player__title.is-scrolling .player__title-text {
+  flex: none;
+  margin-right: 2.5em; /* gap between the end of the title and its repeat */
 }
 
 .toggle-sound,
@@ -246,16 +301,52 @@ nav {
   background: var(--paper);
 }
 
+/* "Now playing": two bright ripples keep radiating out of the button, half a
+   beat apart, so one is always clearly visible against the dark page.
+   - ::before is a halo behind the button and text (z-index -1 inside
+     .player's stacking context); it only animates transform/opacity.
+   - the button's own box-shadow is a tighter, crisper ring plus a steady glow. */
+.toggle-sound::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 50%;
+  background: #f5f1e8b3;
+  box-shadow: 0 0 0 1.5px var(--paper);
+  opacity: 0;
+  pointer-events: none;
+}
+
 .toggle-sound:not(.sound-mute) {
-  animation: pulse-ring 1.6s infinite cubic-bezier(0.3, 0, 0, 1);
+  animation: pulse-ring 1.6s infinite cubic-bezier(0.2, 0.6, 0.35, 1);
+}
+
+.toggle-sound:not(.sound-mute)::before {
+  animation: pulse-halo 1.6s -0.8s infinite cubic-bezier(0.2, 0.6, 0.35, 1);
 }
 
 @keyframes pulse-ring {
   from {
-    box-shadow: 0 0 0 0 #f5f1e880;
+    box-shadow:
+      0 0 0 0 #f5f1e8d9,
+      0 0 16px 2px #f5f1e88c;
   }
   to {
-    box-shadow: 0 0 0 12px #f5f1e800;
+    box-shadow:
+      0 0 0 14px #f5f1e800,
+      0 0 16px 2px #f5f1e88c;
+  }
+}
+
+@keyframes pulse-halo {
+  from {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.4);
   }
 }
 
@@ -369,8 +460,16 @@ nav {
 /*******************************************/
 @media (prefers-reduced-motion: reduce) {
   main,
-  .toggle-sound:not(.sound-mute) {
+  .toggle-sound:not(.sound-mute),
+  .toggle-sound:not(.sound-mute)::before {
     animation: none;
+  }
+
+  /* Still show "now playing", just without the motion. */
+  .toggle-sound:not(.sound-mute) {
+    box-shadow:
+      0 0 0 4px #f5f1e859,
+      0 0 16px 2px #f5f1e88c;
   }
 
   .links a {

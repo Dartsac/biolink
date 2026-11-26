@@ -9,6 +9,7 @@
       content="Listen to Tyree on Apple Music, Spotify and YouTube, and follow along on X."
     />
     <meta name="theme-color" content="#0e0c0b" />
+    <meta name="color-scheme" content="dark" />
     <link rel="canonical" href="https://dartsac.github.io/biolink/" />
     <link rel="icon" type="image/png" href="icons/favicon.png" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
@@ -42,11 +43,14 @@
       muted
       loop
       playsinline
+      disableremoteplayback
+      preload="auto"
       poster="artist/background-poster.jpg"
       aria-hidden="true"
     >
-      <source src="artist/background.webm" type="video/webm" />
+      <!-- MP4 first: Safari must never pick the WebM (it stalls in WebKit). -->
       <source src="artist/background.mp4" type="video/mp4" />
+      <source src="artist/background.webm" type="video/webm" />
     </video>
 
     <main>
@@ -81,7 +85,11 @@
           </button>
           <span class="player__text">
             <span class="player__label">Preview</span>
-            <span class="player__title" aria-live="polite"></span>
+            <span class="player__title" aria-live="polite">
+              <span class="player__title-track">
+                <span class="player__title-text"></span>
+              </span>
+            </span>
           </span>
           <button type="button" class="player__next" aria-label="Next song">
             <svg viewBox="0 0 24 24" aria-hidden="true">
