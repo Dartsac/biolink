@@ -86,16 +86,14 @@ button {
   pointer-events: none;
 }
 
-/* Film grain + vignette on top of the video, below the content. */
-body::after {
+/* Vignette + edge fades on top of the video, below the content. Static. */
+body::before {
   content: '';
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
   background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='1.5 1.5 1.5 0 -1.75 1.5 1.5 1.5 0 -1.75 1.5 1.5 1.5 0 -1.75 0 0 0 0 .13'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")
-      0 0 / 200px 200px,
     /* Melt the top and bottom edges into --ink, the colour Safari paints its
        status bar / toolbar areas with, so there is no hard seam. */
     linear-gradient(
@@ -106,6 +104,77 @@ body::after {
     ),
     radial-gradient(120% 75% at 50% 38%, #0000 0%, #0e0c0b8c 100%),
     linear-gradient(#0e0c0b4d, #0e0c0b14 35%, #0e0c0ba6);
+}
+
+/* Film grain, above the vignette. The noise tile is rasterised once; the
+   layer is 40px oversized and only its transform/opacity are stepped
+   (compositor-only), so the grain "boils" at ~10fps without repaints.
+   Keep every grain-boil offset within the 40px overhang. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: -40px;
+  z-index: -1;
+  pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='1.5 1.5 1.5 0 -1.75 1.5 1.5 1.5 0 -1.75 1.5 1.5 1.5 0 -1.75 0 0 0 0 .13'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")
+    0 0 / 200px 200px;
+  will-change: transform, opacity;
+  animation:
+    grain-boil 1s steps(1, end) infinite,
+    grain-flicker 1.3s steps(1, end) infinite;
+}
+
+@keyframes grain-boil {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  10% {
+    transform: translate3d(-23px, 17px, 0);
+  }
+  20% {
+    transform: translate3d(31px, -9px, 0);
+  }
+  30% {
+    transform: translate3d(-12px, -34px, 0);
+  }
+  40% {
+    transform: translate3d(19px, 28px, 0);
+  }
+  50% {
+    transform: translate3d(-37px, 5px, 0);
+  }
+  60% {
+    transform: translate3d(8px, -21px, 0);
+  }
+  70% {
+    transform: translate3d(36px, 33px, 0);
+  }
+  80% {
+    transform: translate3d(-29px, -15px, 0);
+  }
+  90% {
+    transform: translate3d(14px, 38px, 0);
+  }
+}
+
+@keyframes grain-flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  20% {
+    opacity: 0.86;
+  }
+  40% {
+    opacity: 0.95;
+  }
+  60% {
+    opacity: 0.8;
+  }
+  80% {
+    opacity: 0.9;
+  }
 }
 
 /******************************************
@@ -462,6 +531,11 @@ nav {
   main,
   .toggle-sound:not(.sound-mute),
   .toggle-sound:not(.sound-mute)::before {
+    animation: none;
+  }
+
+  /* Grain stays, but static. */
+  body::after {
     animation: none;
   }
 
