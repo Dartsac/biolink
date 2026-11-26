@@ -1,5 +1,5 @@
 /******************************************
-/* BASE
+/* TOKENS
 /*******************************************/
 *,
 *::before,
@@ -8,16 +8,17 @@
 }
 
 :root {
-  --glass: #fffa;
-  --glass-filter: blur(10px) saturate(160%) contrast(180%);
-  --shadow: rgb(28 32 93 / 24%) 0 2px 8px 0;
-  --ink: #000;
-  --paper: #fbfbfb;
+  --ink: #0e0c0b;
+  --paper: #f5f1e8;
+  --muted: #f5f1e8b8;
+  --line: #ffffff2e;
+  --sans:
+    system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
   /* 1% of the *visible* viewport height. dvh tracks mobile browser toolbars
      showing/hiding, so the page always fits exactly; vh is the fallback. */
   --h: 1vh;
-  --toggle-size: 55px;
-  --edge: max(1rem, env(safe-area-inset-right));
+  --control: clamp(30px, calc(var(--h) * 5.4), 36px);
 }
 
 @supports (height: 1dvh) {
@@ -26,6 +27,9 @@
   }
 }
 
+/******************************************
+/* BASE
+/*******************************************/
 html,
 body {
   height: 100%;
@@ -34,23 +38,18 @@ body {
   /* One screen, no scrolling or rubber-band bounce. */
   overflow: hidden;
   overscroll-behavior: none;
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    Helvetica,
-    Arial,
-    sans-serif;
 }
 
 body {
-  background: #111 url('../artist/background-poster.jpg') center / cover
+  font-family: var(--sans);
+  color: var(--paper);
+  background: var(--ink) url('../artist/background-poster.jpg') center / cover
     no-repeat;
+  -webkit-font-smoothing: antialiased;
 }
 
 a {
-  color: var(--ink);
+  color: inherit;
   text-decoration: none;
 }
 
@@ -58,40 +57,63 @@ h1 {
   margin: 0;
 }
 
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
 :focus-visible {
-  outline: 3px solid var(--paper);
+  outline: 2px solid var(--paper);
   outline-offset: 3px;
-  box-shadow: 0 0 0 6px var(--ink);
 }
 
 /******************************************
 /* BACKGROUND
 /*******************************************/
+/* The video is tiny (640x360), so blur, darkening and saturation are baked
+   into the file (see README) to hide upscaling and keep this GPU-cheap. */
 .background-video {
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: -2;
   width: 100%;
   height: 100%;
   object-fit: cover;
   pointer-events: none;
 }
 
+/* Film grain + vignette on top of the video, below the content. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='1.5 1.5 1.5 0 -1.75 1.5 1.5 1.5 0 -1.75 1.5 1.5 1.5 0 -1.75 0 0 0 0 .13'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")
+      0 0 / 200px 200px,
+    radial-gradient(120% 75% at 50% 38%, #0000 0%, #0e0c0b8c 100%),
+    linear-gradient(#0e0c0b4d, #0e0c0b14 35%, #0e0c0ba6);
+}
+
 /******************************************
 /* LAYOUT
 /*******************************************/
 main {
-  position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: space-evenly;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, calc(var(--h) * 4), 40px);
   height: calc(var(--h) * 100);
-  padding: max(calc(var(--h) * 2), env(safe-area-inset-top))
-    max(1.5rem, env(safe-area-inset-right))
-    max(calc(var(--h) * 2), env(safe-area-inset-bottom))
-    max(1.5rem, env(safe-area-inset-left));
+  padding: max(calc(var(--h) * 2.5), env(safe-area-inset-top))
+    max(24px, env(safe-area-inset-right))
+    max(calc(var(--h) * 2.5), env(safe-area-inset-bottom))
+    max(24px, env(safe-area-inset-left));
   overflow: hidden;
-  animation: reveal 2s ease-in-out 0.5s both;
+  /* `backwards`, not `both`: once finished, <main> must have no filter at
+     all, or it stays a backdrop root and the player's backdrop blur breaks. */
+  animation: reveal 1.6s ease-out 0.3s backwards;
 }
 
 @keyframes reveal {
@@ -101,9 +123,7 @@ main {
   }
   to {
     opacity: 1;
-    /* `none` (not blur(0)) so <main> stops being a backdrop root and the
-       glass effect on the link pills can see the video behind it. */
-    filter: none;
+    filter: blur(0);
   }
 }
 
@@ -111,44 +131,154 @@ header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: calc(var(--h) * 1);
+  gap: clamp(6px, calc(var(--h) * 1.6), 14px);
+  width: 100%;
   text-align: center;
 }
 
-/* Everything below scales with screen height so it fits on short phones
-   (e.g. iPhone SE with toolbars) and fills tall ones. */
+nav {
+  width: 100%;
+}
+
+/******************************************
+/* IDENTITY
+/*******************************************/
 .signature img {
   display: block;
-  /* Leave room on both sides for the sound toggle in the corner. */
-  width: min(
-    350px,
-    calc(100vw - 2 * (var(--toggle-size) + var(--edge)) - 1rem),
-    calc(var(--h) * 30)
-  );
-  height: auto;
+  width: auto;
+  height: clamp(60px, calc(var(--h) * 16), 150px);
+  max-width: 70vw;
+  filter: drop-shadow(0 2px 14px #0009);
 }
 
 .profile-pic {
   display: block;
-  width: min(14rem, 60vw, calc(var(--h) * 23));
+  width: clamp(80px, calc(var(--h) * 19), 184px);
   height: auto;
   aspect-ratio: 1;
   object-fit: cover;
+  border: 2px solid var(--paper);
   border-radius: 50%;
-  border: 1px solid var(--paper);
-  box-shadow: var(--shadow);
+  box-shadow: 0 10px 40px #0009;
 }
 
 .handle {
-  display: inline-block;
   margin: 0;
-  padding: 0.3em 0.6em;
-  font-size: 0.8em;
-  font-weight: bold;
+  font: 500 clamp(11px, calc(var(--h) * 1.9), 13px) / 1.2 var(--mono);
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+/******************************************
+/* PLAYER: play/pause + title + next
+/*******************************************/
+.player {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(100%, 22rem);
+  margin-top: calc(var(--h) * 0.6);
+  padding: 4px;
+  font-size: clamp(12px, calc(var(--h) * 2.1), 14px);
+  background: #0e0c0b8c;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.player[hidden] {
+  display: none;
+}
+
+.player__text {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.player__label {
+  font: 500 0.78em / 1 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.player__title {
+  overflow: hidden;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.toggle-sound,
+.player__next {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: var(--control);
+  height: var(--control);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+}
+
+/* 44px+ hit areas without growing the visuals. */
+.toggle-sound::after,
+.player__next::after {
+  content: '';
+  position: absolute;
+  inset: -7px;
+}
+
+.toggle-sound svg,
+.player__next svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.toggle-sound {
+  color: var(--ink);
+  background: var(--paper);
+}
+
+.toggle-sound:not(.sound-mute) {
+  animation: pulse-ring 1.6s infinite cubic-bezier(0.3, 0, 0, 1);
+}
+
+@keyframes pulse-ring {
+  from {
+    box-shadow: 0 0 0 0 #f5f1e880;
+  }
+  to {
+    box-shadow: 0 0 0 12px #f5f1e800;
+  }
+}
+
+.toggle-sound .icon-play {
+  margin-left: 2px; /* optical centring of the triangle */
+}
+
+.toggle-sound .icon-pause,
+.toggle-sound:not(.sound-mute) .icon-play {
+  display: none;
+}
+
+.toggle-sound:not(.sound-mute) .icon-pause {
+  display: block;
+}
+
+.player__next {
   color: var(--paper);
-  background-color: #000a;
-  border: 1px solid;
-  border-radius: 1em;
+  background: none;
+}
+
+.player__next:hover {
+  background: #ffffff24;
 }
 
 /******************************************
@@ -157,9 +287,9 @@ header {
 .links {
   display: flex;
   flex-direction: column;
-  gap: clamp(0.4rem, calc(var(--h) * 2.2), 1.4rem);
+  gap: clamp(6px, calc(var(--h) * 1.5), 12px);
   width: 100%;
-  max-width: 36rem;
+  max-width: 24rem;
   margin: 0 auto;
   padding: 0;
   list-style: none;
@@ -169,23 +299,32 @@ header {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5em;
-  padding: clamp(0.5rem, calc(var(--h) * 2), 1rem);
+  gap: 10px;
+  height: clamp(38px, calc(var(--h) * 7.2), 54px);
+  padding: 0 20px;
+  font-size: clamp(14px, calc(var(--h) * 2.4), 16px);
+  font-weight: 600;
+  letter-spacing: -0.005em;
   white-space: nowrap;
-  font-size: clamp(0.9rem, calc(var(--h) * 2.3), 1rem);
-  border-radius: 10em;
-  background-color: var(--glass);
-  backdrop-filter: var(--glass-filter);
-  -webkit-backdrop-filter: var(--glass-filter);
-  box-shadow: var(--shadow);
+  color: var(--ink);
+  background: var(--paper);
+  border-radius: 999px;
+  box-shadow:
+    0 1px 0 #fff inset,
+    0 8px 24px #00000059;
   transition:
     transform 150ms ease,
     background-color 150ms ease;
 }
 
+.links a img {
+  width: clamp(18px, calc(var(--h) * 3), 22px);
+  height: auto;
+}
+
 .links a:hover {
+  background: #fff;
   transform: translateY(-2px);
-  background-color: #fffd;
 }
 
 .links a:active {
@@ -193,212 +332,35 @@ header {
 }
 
 /******************************************
-/* PLAYER
-/*******************************************/
-.player {
-  display: flex;
-  align-items: center;
-  gap: 0.5em;
-  max-width: 100%;
-  margin-top: calc(var(--h) * 0.5);
-  padding: 0.25em 0.25em 0.25em 0.9em;
-  font-size: 0.8em;
-  color: var(--paper);
-  background-color: #000a;
-  border-radius: 2em;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
-
-.player[hidden] {
-  display: none;
-}
-
-.player__label {
-  opacity: 0.7;
-  white-space: nowrap;
-}
-
-.player.is-playing .player__label::before {
-  content: '♪ ';
-}
-
-.player__title {
-  overflow: hidden;
-  font-weight: bold;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.player__next {
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  width: 2em;
-  height: 2em;
-  padding: 0;
-  color: inherit;
-  background: #fff2;
-  border: 0;
-  border-radius: 50%;
-  cursor: pointer;
-}
-
-.player__next:hover {
-  background: #fff4;
-}
-
-.player__next svg {
-  width: 1em;
-  height: 1em;
-  fill: currentColor;
-}
-
-/******************************************
-/* SOUND TOGGLE
-/*******************************************/
-.toggle-sound {
-  position: absolute;
-  top: max(calc(var(--h) * 2), env(safe-area-inset-top));
-  right: var(--edge);
-  z-index: 1000;
-  display: block;
-  width: var(--toggle-size);
-  height: var(--toggle-size);
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background-color: var(--ink);
-  cursor: pointer;
-  box-shadow: 0 0 0 0 var(--ink);
-  animation: pulse 1.25s infinite cubic-bezier(0.66, 0, 0, 1);
-}
-
-.toggle-sound[hidden] {
-  display: none;
-}
-
-.toggle-sound.sound-mute {
-  box-shadow: none;
-}
-
-@keyframes pulse {
-  to {
-    box-shadow: 0 0 0 45px rgb(232 76 61 / 0%);
-  }
-}
-
-.sound {
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: inline-block;
-  width: 97%;
-  height: 100%;
-  margin-left: -15%;
-}
-
-.sound__icon {
-  display: block;
-  width: 20px;
-  margin: 0 auto;
-  padding-top: 18px;
-}
-
-.sound__wave {
-  position: absolute;
-  inset: 0;
-  margin: auto;
-  border: 2px solid transparent;
-  border-right: 2px solid #fff;
-  border-radius: 50%;
-  transition: all 200ms;
-}
-
-.sound__wave--one {
-  width: 45%;
-  height: 40%;
-}
-
-.sound__wave--two {
-  width: 70%;
-  height: 62%;
-}
-
-.sound__wave--three {
-  width: 95%;
-  height: 75%;
-}
-
-.sound-mute .sound__wave {
-  left: 14px;
-  width: 12px;
-  height: 10px;
-  border-width: 0 2px 0 0;
-  border-radius: 0;
-}
-
-.sound-mute .sound__wave--one {
-  transform: rotate(45deg) translate3d(0, -50%, 0);
-}
-
-.sound-mute .sound__wave--two {
-  transform: rotate(-45deg) translate3d(0, 50%, 0);
-}
-
-.sound-mute .sound__wave--three {
-  height: 20%;
-  opacity: 0;
-  transform: translateX(-46%);
-}
-
-/******************************************
-/* VERY SHORT PORTRAIT SCREENS
-/*******************************************/
-/* e.g. iPhone SE (1st gen) with browser toolbars showing. */
-@media (orientation: portrait) and (max-height: 520px) {
-  .signature img {
-    width: min(350px, calc(var(--h) * 24));
-  }
-
-  .profile-pic {
-    width: calc(var(--h) * 20);
-  }
-}
-
-/******************************************
 /* LANDSCAPE PHONES
 /*******************************************/
-/* Too short to stack everything, so put the profile and links side by side. */
+/* Too short to stack everything, so put identity and links side by side. */
 @media (orientation: landscape) and (max-height: 500px) {
   main {
     flex-direction: row;
-    align-items: center;
-    justify-content: space-evenly;
-    gap: 1.5rem;
-    padding-right: calc(var(--toggle-size) + var(--edge) + 1rem);
+    gap: clamp(24px, 6vw, 64px);
   }
 
   header,
   nav {
-    flex: 1;
+    flex: 0 1 20rem;
     min-width: 0;
   }
 
   .signature img {
-    width: min(350px, calc(var(--h) * 55));
+    height: calc(var(--h) * 22);
   }
 
   .profile-pic {
-    width: calc(var(--h) * 32);
+    width: calc(var(--h) * 30);
   }
 
   .links {
-    gap: calc(var(--h) * 3.5);
+    gap: calc(var(--h) * 3);
   }
 
   .links a {
-    padding: calc(var(--h) * 2.6);
+    height: calc(var(--h) * 14);
   }
 }
 
@@ -407,12 +369,11 @@ header {
 /*******************************************/
 @media (prefers-reduced-motion: reduce) {
   main,
-  .toggle-sound {
+  .toggle-sound:not(.sound-mute) {
     animation: none;
   }
 
-  .links a,
-  .sound__wave {
+  .links a {
     transition: none;
   }
 

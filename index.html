@@ -8,7 +8,7 @@
       name="description"
       content="Listen to Tyree on Apple Music, Spotify and YouTube, and follow along on X."
     />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#0e0c0b" />
     <link rel="canonical" href="https://dartsac.github.io/biolink/" />
     <link rel="icon" type="image/png" href="icons/favicon.png" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
@@ -50,19 +50,6 @@
     </video>
 
     <main>
-      <button
-        type="button"
-        class="toggle-sound sound-mute"
-        aria-label="Play music"
-      >
-        <span class="sound">
-          <img class="sound__icon" src="icons/speaker-fill.svg" alt="" />
-          <span class="sound__wave sound__wave--one"></span>
-          <span class="sound__wave sound__wave--two"></span>
-          <span class="sound__wave sound__wave--three"></span>
-        </span>
-      </button>
-
       <header>
         <h1 class="signature">
           <img src="artist/tyree-signature.svg" alt="Tyree" />
@@ -80,8 +67,22 @@
         <p class="handle">@tyree730</p>
 
         <div class="player" hidden>
-          <span class="player__label">Now previewing</span>
-          <span class="player__title" aria-live="polite"></span>
+          <button
+            type="button"
+            class="toggle-sound sound-mute"
+            aria-label="Play music"
+          >
+            <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+            <svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 5h4v14H6zM14 5h4v14h-4z" />
+            </svg>
+          </button>
+          <span class="player__text">
+            <span class="player__label">Preview</span>
+            <span class="player__title" aria-live="polite"></span>
+          </span>
           <button type="button" class="player__next" aria-label="Next song">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M5 5.5v13l9.5-6.5zM16 5h3v14h-3z" />

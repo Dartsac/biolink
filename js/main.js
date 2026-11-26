@@ -51,7 +51,6 @@ function syncState() {
   const playing = !audio.paused
   toggle.classList.toggle('sound-mute', !playing)
   toggle.setAttribute('aria-label', playing ? 'Pause music' : 'Play music')
-  player.classList.toggle('is-playing', playing)
 }
 
 toggle.addEventListener('click', () => (audio.paused ? play() : pause()))
@@ -69,8 +68,7 @@ audio.addEventListener('error', () => {
   if (consecutiveErrors < tracks.length) {
     next()
   } else {
-    // Every preview failed (e.g. Apple moved them); hide the player entirely.
-    toggle.hidden = true
+    // Every preview failed (e.g. Apple moved them); hide the player.
     player.hidden = true
   }
 })

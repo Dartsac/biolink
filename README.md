@@ -39,14 +39,21 @@ the `<audio>` `src` from dev tools. Add an entry to `js/tracks.js` with the part
 of the URL after `.../AudioPreview`. If every preview fails to load, the player
 hides itself.
 
-**Replace the background:** export a short, small clip (the current one is
-320×180) and re-encode:
+**Replace the background:** the video is tiny, so the soft-focus look (blur,
+darkening, saturation) is baked into the files rather than done with CSS
+filters. Always encode from the *untreated* source clip — never from the
+committed files, or the treatment is applied twice:
 
 ```sh
-ffmpeg -i clip.mov -an -pix_fmt yuv420p -c:v libx264 -crf 26 -movflags +faststart artist/background.mp4
-ffmpeg -i clip.mov -an -pix_fmt yuv420p -c:v libvpx-vp9 -crf 38 -b:v 0 artist/background.webm
-ffmpeg -i clip.mov -frames:v 1 -q:v 3 artist/background-poster.jpg
+VF='scale=640:360:flags=lanczos,gblur=sigma=2,eq=saturation=1.3,colorchannelmixer=rr=0.55:gg=0.55:bb=0.55'
+ffmpeg -i clip.mov -an -vf "$VF" -pix_fmt yuv420p -c:v libx264 -crf 30 -preset veryslow -movflags +faststart artist/background.mp4
+ffmpeg -i clip.mov -an -vf "$VF" -pix_fmt yuv420p -c:v libvpx-vp9 -crf 40 -b:v 0 artist/background.webm
+ffmpeg -i clip.mov -vf "$VF" -frames:v 1 -q:v 3 artist/background-poster.jpg
 ```
+
+The original source clip is `artist/link-edit.gif` in commit `3b579aa`
+(`git show 3b579aa:artist/link-edit.gif > clip.gif`). Film grain and the
+vignette are a CSS overlay (`body::after`).
 
 **Replace the profile photo:** keep it small, since it's displayed at ≤224px:
 
